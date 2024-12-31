@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Net Worth Calculator</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <h1>Net Worth Calculator</h1>
+  <button class="reset-button" onclick="resetAllValues()">Reset All Values</button>
+
+  <div class="section">
+    <h2>Assets</h2>
+    
+    <div class="asset-category">
+      <h3>Cash & Equivalents</h3>
+      <div class="input-group">
+        <label>Cash: Rs.</label>
+        <input type="number" id="cash" value="0">
+      </div>
+      <div class="input-group">
+        <label>Fixed Deposit: Rs.</label>
+        <input type="number" id="fixedDeposit" value="0">
+      </div>
+      <div class="input-group">
+        <label>Liquid Funds: Rs.</label>
+        <input type="number" id="liquidFunds" value="0">
+      </div>
+    </div>
+
+    <div class="asset-category">
+      <h3>Fixed Income</h3>
+      <div class="input-group">
+        <label>EPF: Rs.</label>
+        <input type="number" id="epf" value="0">
+      </div>
+      <div class="input-group">
+        <label>PPF: Rs.</label>
+        <input type="number" id="ppf" value="0">
+      </div>
+    </div>
+
+    <div class="asset-category">
+      <h3>Equity</h3>
+      <div class="input-group">
+        <label>Direct Equity: Rs.</label>
+        <input type="number" id="directEquity" value="0">
+      </div>
+      <div class="input-group">
+        <label>Equity Mutual Funds: Rs.</label>
+        <input type="number" id="equityMF" value="0">
+      </div>
+    </div>
+
+    <div class="asset-category">
+      <h3>Gold</h3>
+      <div class="input-group">
+        <label>Gold Jewels: Rs.</label>
+        <input type="number" id="goldJewels" value="0">
+      </div>
+      <div class="input-group">
+        <label>Gold ETFs: Rs.</label>
+        <input type="number" id="goldETF" value="0">
+      </div>
+    </div>
+
+    <div class="asset-category">
+      <h3>Real Estate</h3>
+      <div class="input-group">
+        <label>Real Estate: Rs.</label>
+        <input type="number" id="realEstate" value="0">
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Debts</h2>
+    <div class="input-group">
+      <label>Mortgage: Rs.</label>
+      <input type="number" id="mortgage" value="0" oninput="calculateNetWorth()">
+    </div>
+    <div class="input-group">
+      <label>Non-Mortgage Loans: Rs.</label>
+      <input type="number" id="nonMortgageLoans" value="0" oninput="calculateNetWorth()">
+    </div>
+    <div class="input-group">
+      <label>Credit Card Balance: Rs.</label>
+      <input type="number" id="creditCardBalance" value="0" oninput="calculateNetWorth()">
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Financial Goals</h2>
+    <div class="input-group">
+      <label>Target Net Worth: $</label>
+      <input type="number" id="targetNetWorth" value="0">
+    </div>
+    <div class="input-group">
+      <label>Timeline (years): </label>
+      <input type="number" id="timeline" value="1">
+    </div>
+  </div>
+
+  <button onclick="calculateNetWorth()">Calculate Net Worth</button>
+
+  <div class="result" id="netWorthResult"></div>
+  <div class="result" id="goalAnalysis"></div>
+
+  <script>
+    // Load saved values when page loads
+    window.onload = function() {
+      const inputs = document.querySelectorAll('input[type="number"]');
+      inputs.forEach(input => {
+        // Load saved value
+        const savedValue = localStorage.getItem(input.id);
+        if (savedValue !== null) {
+          input.value = savedValue;
+        }
+        
+        // Add event listeners
+        input.addEventListener('input', function() {
+          localStorage.setItem(this.id, this.value);
+          calculateNetWorth();
+        });
+      });
+      
+      // Calculate initial net worth
+      calculateNetWorth();
+    };
+
+    function resetAllValues() {
+      if (confirm('Are you sure you want to reset all values to 0?')) {
+        localStorage.clear();
+        const inputs = document.querySelectorAll('input[type="number"]');
+        inputs.forEach(input => {
+          input.value = 0;
+        });
+        calculateNetWorth();
+      }
+    }
+
+    function calculateNetWorth() {
+      const assetFields = {
+        cashEquivalents: ['cash', 'fixedDeposit', 'liquidFunds'],
+        fixedIncome: ['epf', 'ppf'],
+        equity: ['directEquity', 'equityMF'],
+        gold: ['goldJewels', 'goldETF'],
+        realEstate: ['realEstate']
+      };
+
+      let totalAssets = 0;
+      for (const category in assetFields) {
+        totalAssets += assetFields[category]
+          .map(id => Number(document.getElementById(id).value) || 0)
+          .reduce((a, b) => a + b, 0);
+      }
+
+      // Updated debt calculation
+      const debts = {
+        mortgage: Number(document.getElementById('mortgage').value) || 0,
+        nonMortgageLoans: Number(document.getElementById('nonMortgageLoans').value) || 0,
+        creditCardBalance: Number(document.getElementById('creditCardBalance').value) || 0
+      };
+      const totalDebts = Object.values(debts).reduce((a, b) => a + b, 0);
+
+      // Calculate net worth
+      const netWorth = totalAssets - totalDebts;
+
+      // Get goals
+      const targetNetWorth = Number(document.getElementById('targetNetWorth').value);
+      const timeline = Number(document.getElementById('timeline').value);
+
+      // Display results
+      document.getElementById('netWorthResult').innerHTML = 
+        `Current Net Worth: ₹${netWorth.toLocaleString()}`;
+
+      // Analyze goals
+      if (targetNetWorth > netWorth) {
+        const required = targetNetWorth - netWorth;
+        const yearly = required / timeline;
+        const monthly = yearly / 12;
+        document.getElementById('goalAnalysis').innerHTML = 
+          `To reach your goal of ₹${targetNetWorth.toLocaleString()}, you need:<br>` +
+          `• ₹${yearly.toLocaleString()} per year<br>` +
+          `• ₹${monthly.toLocaleString()} per month<br>` +
+          `for the next ${timeline} ${timeline === 1 ? 'year' : 'years'}.`;
+      } else {
+        document.getElementById('goalAnalysis').innerHTML = 
+          'Congratulations! You have already reached your target net worth!';
+      }
+    }
+  </script>
+</body>
+</html>
