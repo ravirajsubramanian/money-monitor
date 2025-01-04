@@ -5,191 +5,174 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Net Worth Calculator</title>
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+  <div class="floating-networth" id="floatingNetWorth"></div>
+  
   <h1>Net Worth Calculator</h1>
-  <button class="reset-button" onclick="resetAllValues()">Reset All Values</button>
-
-  <div class="section">
-    <h2>Assets</h2>
-    
-    <div class="asset-category">
-      <h3>Cash & Equivalents</h3>
-      <div class="input-group">
-        <label>Cash: Rs.</label>
-        <input type="number" id="cash" value="0">
-      </div>
-      <div class="input-group">
-        <label>Fixed Deposit: Rs.</label>
-        <input type="number" id="fixedDeposit" value="0">
-      </div>
-      <div class="input-group">
-        <label>Liquid Funds: Rs.</label>
-        <input type="number" id="liquidFunds" value="0">
-      </div>
+  
+  <div class="tab-container">
+    <div class="tabs">
+      <button class="tab-button active" data-tab="overview">Overview</button>
+      <button class="tab-button" data-tab="investments">Investments</button>
+      <button class="tab-button" data-tab="goals">Goals</button>
     </div>
 
-    <div class="asset-category">
-      <h3>Fixed Income</h3>
-      <div class="input-group">
-        <label>EPF: Rs.</label>
-        <input type="number" id="epf" value="0">
+    <!-- Overview Tab -->
+    <div class="tab-content active" id="overview">
+      <div class="charts-section">
+        <div class="chart-container">
+          <canvas id="assetsChart"></canvas>
+        </div>
+        <div class="chart-container">
+          <canvas id="debtsChart"></canvas>
+        </div>
       </div>
-      <div class="input-group">
-        <label>PPF: Rs.</label>
-        <input type="number" id="ppf" value="0">
-      </div>
-    </div>
 
-    <div class="asset-category">
-      <h3>Equity</h3>
-      <div class="input-group">
-        <label>Direct Equity: Rs.</label>
-        <input type="number" id="directEquity" value="0">
-      </div>
-      <div class="input-group">
-        <label>Equity Mutual Funds: Rs.</label>
-        <input type="number" id="equityMF" value="0">
+      <div class="section">
+        <h2>Asset Allocation</h2>
+        <table id="allocationTable" class="allocation-table">
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th>Amount</th>
+              <th>Percentage</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+          <thead>
+            <tr>
+              <th>Total</th>
+              <th id="totalAssetsValue"></th>
+              <th id="totalAssetsPercent"></th>
+            </tr>
+          </thead>
+        </table>
       </div>
     </div>
 
-    <div class="asset-category">
-      <h3>Gold</h3>
-      <div class="input-group">
-        <label>Gold Jewels: Rs.</label>
-        <input type="number" id="goldJewels" value="0">
+    <!-- Investments Tab -->
+    <div class="tab-content" id="investments">
+      <div class="edit-controls">
+        <button id="editButton" class="edit-button">
+          <i class="fas fa-edit"></i> Edit Investments
+        </button>
+        <button id="saveButton" class="save-button hidden">
+          <i class="fas fa-save"></i> Save Changes
+        </button>
       </div>
-      <div class="input-group">
-        <label>Gold ETFs: Rs.</label>
-        <input type="number" id="goldETF" value="0">
-      </div>
-    </div>
 
-    <div class="asset-category">
-      <h3>Real Estate</h3>
-      <div class="input-group">
-        <label>Real Estate: Rs.</label>
-        <input type="number" id="realEstate" value="0">
-      </div>
-    </div>
-  </div>
-
-  <div class="section">
-    <h2>Debts</h2>
-    <div class="input-group">
-      <label>Mortgage: Rs.</label>
-      <input type="number" id="mortgage" value="0" oninput="calculateNetWorth()">
-    </div>
-    <div class="input-group">
-      <label>Non-Mortgage Loans: Rs.</label>
-      <input type="number" id="nonMortgageLoans" value="0" oninput="calculateNetWorth()">
-    </div>
-    <div class="input-group">
-      <label>Credit Card Balance: Rs.</label>
-      <input type="number" id="creditCardBalance" value="0" oninput="calculateNetWorth()">
-    </div>
-  </div>
-
-  <div class="section">
-    <h2>Financial Goals</h2>
-    <div class="input-group">
-      <label>Target Net Worth: $</label>
-      <input type="number" id="targetNetWorth" value="0">
-    </div>
-    <div class="input-group">
-      <label>Timeline (years): </label>
-      <input type="number" id="timeline" value="1">
-    </div>
-  </div>
-
-  <button onclick="calculateNetWorth()">Calculate Net Worth</button>
-
-  <div class="result" id="netWorthResult"></div>
-  <div class="result" id="goalAnalysis"></div>
-
-  <script>
-    // Load saved values when page loads
-    window.onload = function() {
-      const inputs = document.querySelectorAll('input[type="number"]');
-      inputs.forEach(input => {
-        // Load saved value
-        const savedValue = localStorage.getItem(input.id);
-        if (savedValue !== null) {
-          input.value = savedValue;
-        }
+      <div class="section">
+        <h2>Assets</h2>
         
-        // Add event listeners
-        input.addEventListener('input', function() {
-          localStorage.setItem(this.id, this.value);
-          calculateNetWorth();
-        });
-      });
-      
-      // Calculate initial net worth
-      calculateNetWorth();
-    };
+        <div class="asset-category">
+          <h3>Cash & Equivalents</h3>
+          <div class="input-group">
+            <label>Cash</label>
+            <div class="input-wrapper">
+              <span class="currency-symbol">₹</span>
+              <input type="number" id="cash" value="0" min="0" class="currency-input">
+              <i class="fas fa-question-circle tooltip-icon" title="Physical cash and bank account balances"></i>
+            </div>
+          </div>
+          <div class="input-group">
+            <label title="Bank deposits with fixed interest rates and tenure">Fixed Deposit: ₹</label>
+            <input type="number" id="fixedDeposit" value="0" min="0" class="currency-input">
+          </div>
+          <div class="input-group">
+            <label>Liquid Funds: Rs.</label>
+            <input type="number" id="liquidFunds" value="0">
+          </div>
+        </div>
 
-    function resetAllValues() {
-      if (confirm('Are you sure you want to reset all values to 0?')) {
-        localStorage.clear();
-        const inputs = document.querySelectorAll('input[type="number"]');
-        inputs.forEach(input => {
-          input.value = 0;
-        });
-        calculateNetWorth();
-      }
-    }
+        <div class="asset-category">
+          <h3>Fixed Income</h3>
+          <div class="input-group">
+            <label>EPF: Rs.</label>
+            <input type="number" id="epf" value="0">
+          </div>
+          <div class="input-group">
+            <label>PPF: Rs.</label>
+            <input type="number" id="ppf" value="0">
+          </div>
+        </div>
 
-    function calculateNetWorth() {
-      const assetFields = {
-        cashEquivalents: ['cash', 'fixedDeposit', 'liquidFunds'],
-        fixedIncome: ['epf', 'ppf'],
-        equity: ['directEquity', 'equityMF'],
-        gold: ['goldJewels', 'goldETF'],
-        realEstate: ['realEstate']
-      };
+        <div class="asset-category">
+          <h3>Equity</h3>
+          <div class="input-group">
+            <label>Direct Equity: Rs.</label>
+            <input type="number" id="directEquity" value="0">
+          </div>
+          <div class="input-group">
+            <label>Equity Mutual Funds: Rs.</label>
+            <input type="number" id="equityMF" value="0">
+          </div>
+        </div>
 
-      let totalAssets = 0;
-      for (const category in assetFields) {
-        totalAssets += assetFields[category]
-          .map(id => Number(document.getElementById(id).value) || 0)
-          .reduce((a, b) => a + b, 0);
-      }
+        <div class="asset-category">
+          <h3>Gold</h3>
+          <div class="input-group">
+            <label>Gold Jewels: Rs.</label>
+            <input type="number" id="goldJewels" value="0">
+          </div>
+          <div class="input-group">
+            <label>Gold ETFs: Rs.</label>
+            <input type="number" id="goldETF" value="0">
+          </div>
+        </div>
 
-      // Updated debt calculation
-      const debts = {
-        mortgage: Number(document.getElementById('mortgage').value) || 0,
-        nonMortgageLoans: Number(document.getElementById('nonMortgageLoans').value) || 0,
-        creditCardBalance: Number(document.getElementById('creditCardBalance').value) || 0
-      };
-      const totalDebts = Object.values(debts).reduce((a, b) => a + b, 0);
+        <div class="asset-category">
+          <h3>Real Estate</h3>
+          <div class="input-group">
+            <label>Real Estate: Rs.</label>
+            <input type="number" id="realEstate" value="0">
+          </div>
+        </div>
+      </div>
 
-      // Calculate net worth
-      const netWorth = totalAssets - totalDebts;
+      <div class="section">
+        <h2>Debts</h2>
+        <div class="input-group">
+          <label>Mortgage: Rs.</label>
+          <input type="number" id="mortgage" value="0" oninput="calculateNetWorth()">
+        </div>
+        <div class="input-group">
+          <label>Non-Mortgage Loans: Rs.</label>
+          <input type="number" id="nonMortgageLoans" value="0" oninput="calculateNetWorth()">
+        </div>
+        <div class="input-group">
+          <label>Credit Card: Rs.</label>
+          <input type="number" id="creditCard" value="0" oninput="calculateNetWorth()">
+        </div>
+      </div>
+    </div>
 
-      // Get goals
-      const targetNetWorth = Number(document.getElementById('targetNetWorth').value);
-      const timeline = Number(document.getElementById('timeline').value);
+    <!-- Goals Tab -->
+    <div class="tab-content" id="goals">
+      <div class="section">
+        <h2>Financial Goals</h2>
+        <div class="goals-grid">
+          <div class="goal-card">
+            <h3>Net Worth Target</h3>
+            <div class="input-group">
+              <label>Target Amount: ₹</label>
+              <input type="number" id="targetNetWorth" value="0">
+            </div>
+            <div class="input-group">
+              <label>Timeline (years):</label>
+              <input type="number" id="timeline" value="1">
+            </div>
+            <div id="goalAnalysis" class="goal-analysis"></div>
+          </div>
+          <!-- Add more goal cards as needed -->
+        </div>
+      </div>
+    </div>
+  </div>
 
-      // Display results
-      document.getElementById('netWorthResult').innerHTML = 
-        `Current Net Worth: ₹${netWorth.toLocaleString()}`;
-
-      // Analyze goals
-      if (targetNetWorth > netWorth) {
-        const required = targetNetWorth - netWorth;
-        const yearly = required / timeline;
-        const monthly = yearly / 12;
-        document.getElementById('goalAnalysis').innerHTML = 
-          `To reach your goal of ₹${targetNetWorth.toLocaleString()}, you need:<br>` +
-          `• ₹${yearly.toLocaleString()} per year<br>` +
-          `• ₹${monthly.toLocaleString()} per month<br>` +
-          `for the next ${timeline} ${timeline === 1 ? 'year' : 'years'}.`;
-      } else {
-        document.getElementById('goalAnalysis').innerHTML = 
-          'Congratulations! You have already reached your target net worth!';
-      }
-    }
-  </script>
+  <div class="error-message" id="errorMessage"></div>
+  <script src="script.js"></script>
 </body>
 </html>
