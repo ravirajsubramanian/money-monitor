@@ -56,6 +56,9 @@
     <!-- Investments Tab -->
     <div class="tab-content" id="investments">
       <div class="edit-controls">
+        <button class="reset-button" onclick="resetAllValues()">
+          <i class="fas fa-trash"></i> Reset All Values
+        </button>
         <button id="editButton" class="edit-button">
           <i class="fas fa-edit"></i> Edit Investments
         </button>
@@ -65,49 +68,113 @@
       </div>
 
       <div class="section">
+        <h2>Debts</h2>
+        <div class="input-group">
+          <label>Mortgage: Rs.</label>
+          <input type="number" id="mortgage" value="0" oninput="calculateNetWorth()">
+        </div>
+        <div class="input-group">
+          <label>Non-Mortgage Loans: Rs.</label>
+          <input type="number" id="nonMortgageLoans" value="0" oninput="calculateNetWorth()">
+        </div>
+        <div class="input-group">
+          <label>Credit Card: Rs.</label>
+          <input type="number" id="creditCard" value="0" oninput="calculateNetWorth()">
+        </div>
+      </div>
+
+      <div class="section">
         <h2>Assets</h2>
         
         <div class="asset-category">
-          <h3>Cash & Equivalents</h3>
+          <h3>Cash & Bank</h3>
           <div class="input-group">
             <label>Cash</label>
             <div class="input-wrapper">
               <span class="currency-symbol">₹</span>
               <input type="number" id="cash" value="0" min="0" class="currency-input">
-              <i class="fas fa-question-circle tooltip-icon" title="Physical cash and bank account balances"></i>
+              <i class="fas fa-question-circle tooltip-icon" title="Physical cash in hand"></i>
             </div>
           </div>
           <div class="input-group">
-            <label title="Bank deposits with fixed interest rates and tenure">Fixed Deposit: ₹</label>
-            <input type="number" id="fixedDeposit" value="0" min="0" class="currency-input">
-          </div>
-          <div class="input-group">
-            <label>Liquid Funds: Rs.</label>
-            <input type="number" id="liquidFunds" value="0">
+            <label>Savings Account</label>
+            <div class="input-wrapper">
+              <span class="currency-symbol">₹</span>
+              <input type="number" id="savingsAccount" value="0" min="0" class="currency-input">
+              <i class="fas fa-question-circle tooltip-icon" title="Total balance in all savings accounts"></i>
+            </div>
           </div>
         </div>
 
         <div class="asset-category">
           <h3>Fixed Income</h3>
           <div class="input-group">
-            <label>EPF: Rs.</label>
-            <input type="number" id="epf" value="0">
+            <label>Fixed Deposit</label>
+            <div class="input-wrapper">
+              <span class="currency-symbol">₹</span>
+              <input type="number" id="fixedDeposit" value="0" min="0" class="currency-input">
+              <i class="fas fa-question-circle tooltip-icon" title="Bank deposits with fixed interest rates and tenure"></i>
+            </div>
           </div>
           <div class="input-group">
-            <label>PPF: Rs.</label>
-            <input type="number" id="ppf" value="0">
+            <label>EPF</label>
+            <div class="input-wrapper">
+              <span class="currency-symbol">₹</span>
+              <input type="number" id="epf" value="0" class="currency-input">
+              <i class="fas fa-question-circle tooltip-icon" title="Employee Provident Fund balance"></i>
+            </div>
+          </div>
+          <div class="input-group">
+            <label>PPF</label>
+            <div class="input-wrapper">
+              <span class="currency-symbol">₹</span>
+              <input type="number" id="ppf" value="0" class="currency-input">
+              <i class="fas fa-question-circle tooltip-icon" title="Public Provident Fund balance"></i>
+            </div>
+          </div>
+          <div class="input-group">
+            <label>Liquid Funds</label>
+            <div class="input-wrapper">
+              <span class="currency-symbol">₹</span>
+              <input type="number" id="liquidFunds" value="0" class="currency-input">
+              <i class="fas fa-question-circle tooltip-icon" title="Short-term debt mutual funds"></i>
+            </div>
+          </div>
+          <div class="input-group">
+            <label>Post Office Savings</label>
+            <div class="input-wrapper">
+              <span class="currency-symbol">₹</span>
+              <input type="number" id="postOfficeSavings" value="0" class="currency-input">
+              <i class="fas fa-question-circle tooltip-icon" title="Post office savings schemes including NSC, KVP, etc."></i>
+            </div>
+          </div>
+          <div class="input-group">
+            <label>Sukanya Samriddhi Yojana</label>
+            <div class="input-wrapper">
+              <span class="currency-symbol">₹</span>
+              <input type="number" id="ssy" value="0" class="currency-input">
+              <i class="fas fa-question-circle tooltip-icon" title="Government savings scheme for girl child"></i>
+            </div>
           </div>
         </div>
 
         <div class="asset-category">
           <h3>Equity</h3>
           <div class="input-group">
-            <label>Direct Equity: Rs.</label>
-            <input type="number" id="directEquity" value="0">
+            <label>Direct Equity</label>
+            <div class="input-wrapper">
+              <span class="currency-symbol">₹</span>
+              <input type="number" id="directEquity" value="0" class="currency-input">
+              <i class="fas fa-question-circle tooltip-icon" title="Direct stock purchases from share market"></i>
+            </div>
           </div>
           <div class="input-group">
-            <label>Equity Mutual Funds: Rs.</label>
-            <input type="number" id="equityMF" value="0">
+            <label>Equity Mutual Funds</label>
+            <div class="input-wrapper">
+              <span class="currency-symbol">₹</span>
+              <input type="number" id="equityMF" value="0" class="currency-input">
+              <i class="fas fa-question-circle tooltip-icon" title="Stock market-based mutual funds"></i>
+            </div>
           </div>
         </div>
 
@@ -130,23 +197,34 @@
             <input type="number" id="realEstate" value="0">
           </div>
         </div>
+
+        <div class="asset-category">
+          <h3>Alternative Investments</h3>
+          <div class="input-group">
+            <label>Cryptocurrencies</label>
+            <div class="input-wrapper">
+              <span class="currency-symbol">₹</span>
+              <input type="number" id="crypto" value="0" class="currency-input">
+              <i class="fas fa-question-circle tooltip-icon" title="Total value of cryptocurrency holdings"></i>
+            </div>
+          </div>
+          <div class="input-group">
+            <label>P2P Lending</label>
+            <div class="input-wrapper">
+              <span class="currency-symbol">₹</span>
+              <input type="number" id="p2p" value="0" class="currency-input">
+              <i class="fas fa-question-circle tooltip-icon" title="Peer-to-peer lending investments"></i>
+            </div>
+          </div>
+          <div id="otherInvestments" class="other-investments">
+            <!-- Dynamic fields will be added here -->
+          </div>
+          <button type="button" class="add-other-btn" onclick="addOtherInvestment()">
+            <i class="fas fa-plus"></i> Add Other Investment
+          </button>
+        </div>
       </div>
 
-      <div class="section">
-        <h2>Debts</h2>
-        <div class="input-group">
-          <label>Mortgage: Rs.</label>
-          <input type="number" id="mortgage" value="0" oninput="calculateNetWorth()">
-        </div>
-        <div class="input-group">
-          <label>Non-Mortgage Loans: Rs.</label>
-          <input type="number" id="nonMortgageLoans" value="0" oninput="calculateNetWorth()">
-        </div>
-        <div class="input-group">
-          <label>Credit Card: Rs.</label>
-          <input type="number" id="creditCard" value="0" oninput="calculateNetWorth()">
-        </div>
-      </div>
     </div>
 
     <!-- Goals Tab -->
@@ -164,6 +242,7 @@
               <label>Timeline (years):</label>
               <input type="number" id="timeline" value="1">
             </div>
+            <div id="netWorthResult" class="goal-analysis"></div>
             <div id="goalAnalysis" class="goal-analysis"></div>
           </div>
           <!-- Add more goal cards as needed -->

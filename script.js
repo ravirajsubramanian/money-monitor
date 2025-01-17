@@ -1,6 +1,6 @@
 let assetsChart, debtsChart;
 
-// Debounce function
+// Debounce function to wait for user to type the input completely before calling the function
 function debounce(func, wait) {
     let timeout;
     return function executedFunction(...args) {
@@ -36,6 +36,17 @@ function validateInput(input) {
 function showError(message) {
     const errorElement = document.getElementById('errorMessage');
     errorElement.textContent = message;
+    errorElement.style.display = 'block';
+    setTimeout(() => {
+        errorElement.style.display = 'none';
+    }, 3000);
+}
+
+function showSuccess(message) {
+    const errorElement = document.getElementById('errorMessage');
+    errorElement.textContent = message;
+    errorElement.style.backgroundColor = '#d4edda';
+    errorElement.style.color = '#155724';
     errorElement.style.display = 'block';
     setTimeout(() => {
         errorElement.style.display = 'none';
@@ -112,71 +123,6 @@ function updateFloatingNetWorth(netWorth, totalDebts) {
     `;
 }
 
-// Calculate net worth with validation
-const calculateNetWorth = debounce(() => {
-    const assetFields = {
-        cashEquivalents: ['cash', 'fixedDeposit', 'liquidFunds'],
-        fixedIncome: ['epf', 'ppf'],
-        equity: ['directEquity', 'equityMF'],
-        gold: ['goldJewels', 'goldETF'],
-        realEstate: ['realEstate']
-    };
-
-    let totalAssets = 0;
-    for (const category in assetFields) {
-        totalAssets += assetFields[category]
-            .map(id => Number(document.getElementById(id).value) || 0)
-            .reduce((a, b) => a + b, 0);
-    }
-
-    const debts = {
-        mortgage: Number(document.getElementById('mortgage').value) || 0,
-        nonMortgageLoans: Number(document.getElementById('nonMortgageLoans').value) || 0,
-        creditCard: Number(document.getElementById('creditCard').value) || 0
-    };
-    const totalDebts = Object.values(debts).reduce((a, b) => a + b, 0);
-
-    const netWorth = totalAssets - totalDebts;
-    const targetNetWorth = Number(document.getElementById('targetNetWorth').value);
-    const timeline = Number(document.getElementById('timeline').value);
-
-    const assetCategories = {
-        'Cash & Equivalents': assetFields.cashEquivalents.reduce((sum, id) => sum + (Number(document.getElementById(id).value) || 0), 0),
-        'Fixed Income': assetFields.fixedIncome.reduce((sum, id) => sum + (Number(document.getElementById(id).value) || 0), 0),
-        'Equity': assetFields.equity.reduce((sum, id) => sum + (Number(document.getElementById(id).value) || 0), 0),
-        'Gold': assetFields.gold.reduce((sum, id) => sum + (Number(document.getElementById(id).value) || 0), 0),
-        'Real Estate': assetFields.realEstate.reduce((sum, id) => sum + (Number(document.getElementById(id).value) || 0), 0)
-    };
-
-    const debtCategories = {
-        'Mortgage': debts.mortgage,
-        'Non-Mortgage Loans': debts.nonMortgageLoans,
-        'Credit Card': debts.creditCard
-    };
-
-    updateCharts(assetCategories, debtCategories);
-    updateAllocationTable(assetCategories, totalAssets);
-    updateFloatingNetWorth(netWorth, totalDebts);
-
-    // Display results with formatted currency
-    document.getElementById('netWorthResult').innerHTML = 
-        `Current Net Worth: ${formatIndianCurrency(netWorth)}`;
-
-    if (targetNetWorth > netWorth) {
-        const required = targetNetWorth - netWorth;
-        const yearly = required / timeline;
-        const monthly = yearly / 12;
-        document.getElementById('goalAnalysis').innerHTML = 
-            `To reach your goal of ${formatIndianCurrency(targetNetWorth)}, you need:<br>` +
-            `• ${formatIndianCurrency(yearly)} per year<br>` +
-            `• ${formatIndianCurrency(monthly)} per month<br>` +
-            `for the next ${timeline} ${timeline === 1 ? 'year' : 'years'}.`;
-    } else {
-        document.getElementById('goalAnalysis').innerHTML = 
-            'Congratulations! You have already reached your target net worth!';
-    }
-}, 500);
-
 // Tab navigation
 function setupTabNavigation() {
     const tabs = document.querySelectorAll('.tab-button');
@@ -196,9 +142,154 @@ function setupTabNavigation() {
     });
 }
 
+function initializeEditMode() {
+    const editButton = document.getElementById('editButton');
+    const saveButton = document.getElementById('saveButton');
+    const inputs = document.querySelectorAll('#investments input');
+
+    // Initially disable all inputs
+    inputs.forEach(input => {
+        input.disabled = true;
+        input.classList.add('input-disabled');
+    });
+
+    editButton.addEventListener('click', () => {
+        editButton.classList.add('hidden');
+        saveButton.classList.remove('hidden');
+        inputs.forEach(input => {
+            input.disabled = false;
+            input.classList.remove('input-disabled');
+        });
+    });
+
+    saveButton.addEventListener('click', () => {
+        if (validateAllInputs()) {
+            saveButton.classList.add('hidden');
+            editButton.classList.remove('hidden');
+            inputs.forEach(input => {
+                input.disabled = true;
+                input.classList.add('input-disabled');
+                if (input.type === 'number') {
+                    localStorage.setItem(input.id, input.value);
+                }
+            });
+            calculateNetWorth();
+            showSuccess('Investments saved successfully!');
+            updateGoalsTab();
+        }
+    });
+}
+
+function validateAllInputs() {
+    const inputs = document.querySelectorAll('#investments input[type="number"]');
+    for (let input of inputs) {
+        if (!validateInput(input)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+function updateGoalsTab(netWorth) {
+    // Update goal analysis if on goals tab
+    const goalsTab = document.getElementById('goals');
+    if (goalsTab.classList.contains('active')) {
+        const targetNetWorth = Number(document.getElementById('targetNetWorth').value);
+        const timeline = Number(document.getElementById('timeline').value);
+        
+        document.getElementById('netWorthResult').innerHTML = 
+            `Current Net Worth: ${formatIndianCurrency(netWorth)}`;
+
+        if (targetNetWorth > netWorth) {
+            const required = targetNetWorth - netWorth;
+            const yearly = required / timeline;
+            const monthly = yearly / 12;
+            document.getElementById('goalAnalysis').innerHTML = 
+                `To reach your goal of ${formatIndianCurrency(targetNetWorth)}, you need:<br>` +
+                `• ${formatIndianCurrency(yearly)} per year<br>` +
+                `• ${formatIndianCurrency(monthly)} per month<br>` +
+                `for the next ${timeline} ${timeline === 1 ? 'year' : 'years'}.`;
+        } else {
+            document.getElementById('goalAnalysis').innerHTML = 
+                'Congratulations! You have already reached your target net worth!';
+        }
+    }
+}
+
+const calculateNetWorth = debounce(() => {
+
+    const assetFields = {
+        cash: ['cash'],
+        fixedIncome: ['savingsAccount', 'fixedDeposit', 'epf', 'ppf', 'liquidFunds', 'postOfficeSavings', 'ssy'],
+        equity: ['directEquity', 'equityMF'],
+        gold: ['goldJewels', 'goldETF'],
+        realEstate: ['realEstate'],
+        alternative: ['crypto', 'p2p']
+    };
+
+    // Add other investments to calculation
+    const otherInvestments = document.querySelectorAll('.other-investment input[type="number"]');
+    let otherInvestmentsTotal = 0;
+    otherInvestments.forEach(input => {
+        otherInvestmentsTotal += Number(input.value) || 0;
+    });
+
+    const assetCategories = {
+        'Cash': assetFields.cash.reduce((sum, id) => sum + (Number(document.getElementById(id).value) || 0), 0),
+        'Fixed Income': assetFields.fixedIncome.reduce((sum, id) => sum + (Number(document.getElementById(id).value) || 0), 0),
+        'Equity': assetFields.equity.reduce((sum, id) => sum + (Number(document.getElementById(id).value) || 0), 0),
+        'Gold': assetFields.gold.reduce((sum, id) => sum + (Number(document.getElementById(id).value) || 0), 0),
+        'Real Estate': assetFields.realEstate.reduce((sum, id) => sum + (Number(document.getElementById(id).value) || 0), 0),
+        'Alternative': assetFields.alternative.reduce((sum, id) => sum + (Number(document.getElementById(id).value) || 0), 0) + otherInvestmentsTotal
+    };
+
+    let totalAssets = 0;
+    for (const category in assetFields) {
+        totalAssets += assetFields[category]
+            .map(id => Number(document.getElementById(id).value) || 0)
+            .reduce((a, b) => a + b, 0);
+    }
+
+    const debts = {
+        mortgage: Number(document.getElementById('mortgage').value) || 0,
+        nonMortgageLoans: Number(document.getElementById('nonMortgageLoans').value) || 0,
+        creditCard: Number(document.getElementById('creditCard').value) || 0
+    };
+    const totalDebts = Object.values(debts).reduce((a, b) => a + b, 0);
+
+    const netWorth = totalAssets - totalDebts;
+
+    const debtCategories = {
+        'Mortgage': debts.mortgage,
+        'Non-Mortgage Loans': debts.nonMortgageLoans,
+        'Credit Card': debts.creditCard
+    };
+
+    updateCharts(assetCategories, debtCategories);
+    updateAllocationTable(assetCategories, totalAssets);
+    updateFloatingNetWorth(netWorth, totalDebts);
+    updateGoalsTab(netWorth); // Pass netWorth to updateGoalsTab
+}, 500);
+
+function initializeGoalsInputs() {
+    const targetInput = document.getElementById('targetNetWorth');
+    const timelineInput = document.getElementById('timeline');
+    
+    [targetInput, timelineInput].forEach(input => {
+        input.addEventListener('input', function() {
+            if (validateInput(this)) {
+                localStorage.setItem(this.id, this.value);
+                calculateNetWorth();
+            }
+        });
+    });
+}
+
 // Initialize
 window.onload = function() {
     setupTabNavigation();
+    initializeEditMode();
+    initializeGoalsInputs(); // Add this line
     const inputs = document.querySelectorAll('input[type="number"]');
     inputs.forEach(input => {
         const savedValue = localStorage.getItem(input.id);
@@ -224,6 +315,44 @@ function resetAllValues() {
         inputs.forEach(input => {
             input.value = 0;
         });
+        calculateNetWorth();
+    }
+}
+
+function addOtherInvestment() {
+    const container = document.getElementById('otherInvestments');
+    const investmentId = `other_${Date.now()}`;
+    
+    const html = `
+        <div class="input-group other-investment" data-id="${investmentId}">
+            <div class="input-wrapper">
+                <input type="text" placeholder="Investment Name" class="other-name">
+                <span class="currency-symbol">₹</span>
+                <input type="number" id="${investmentId}" value="0" class="currency-input">
+                <button type="button" class="remove-btn" onclick="removeOtherInvestment('${investmentId}')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', html);
+    
+    // Add the new input to the calculation
+    const input = document.getElementById(investmentId);
+    input.addEventListener('input', function() {
+        if (validateInput(this)) {
+            localStorage.setItem(this.id, this.value);
+            calculateNetWorth();
+        }
+    });
+}
+
+function removeOtherInvestment(id) {
+    const element = document.querySelector(`[data-id="${id}"]`);
+    if (element) {
+        localStorage.removeItem(id);
+        element.remove();
         calculateNetWorth();
     }
 }
